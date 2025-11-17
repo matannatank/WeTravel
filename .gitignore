@@ -1,0 +1,31 @@
+# General
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.env.production
+.env.development
+
+# Node / Next.js
+node_modules
+.next
+dist
+out
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.vscode
+.idea
+
+# Build Artifacts
+*.tsbuildinfo
+
+# Firebase / Secrets
+firebase-debug.log
+service-account.json
+
