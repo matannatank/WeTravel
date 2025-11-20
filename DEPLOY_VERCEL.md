@@ -14,10 +14,10 @@
 4. **בחר את ה-repository:** `matannatank/WeTravel`
 5. **הגדר את הפרויקט:**
    - **Framework Preset:** Next.js (זיהוי אוטומטי)
-   - **Root Directory:** `frontend` ⚠️ **חשוב!**
-   - **Build Command:** `npm run build` (אוטומטי)
-   - **Output Directory:** `.next` (אוטומטי)
-   - **Install Command:** `npm install` (אוטומטי)
+   - **Root Directory:** `frontend` ⚠️ **חשוב!** (הגדר את זה ב-Vercel Dashboard, לא ב-vercel.json)
+   - **Build Command:** `cd frontend && npm run build` (או השאר אוטומטי)
+   - **Output Directory:** `frontend/.next` (או השאר אוטומטי)
+   - **Install Command:** `cd frontend && npm install` (או השאר אוטומטי)
 
 ### דרך 2: דרך Vercel CLI
 
