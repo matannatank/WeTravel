@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { startSpeechRecognition } from "@/lib/integrations/speechToText";
+import { startSpeechRecognition, type SpeechRecognitionType } from "@/lib/integrations/speechToText";
 
 interface Props {
   onTranscript: (transcript: string) => void;
@@ -11,7 +11,7 @@ interface Props {
 export const SpeechRecorder = ({ onTranscript, language = "he-IL" }: Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef<ReturnType<typeof startSpeechRecognition>>(null);
+  const recognitionRef = useRef<SpeechRecognitionType | null>(null);
 
   useEffect(() => {
     return () => {

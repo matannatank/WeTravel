@@ -32,6 +32,9 @@ export interface SpeechRecognitionEvent {
   };
 }
 
+// Export type alias for easier use
+export type SpeechRecognition = SpeechRecognitionType;
+
 // Client-side implementation using Web Speech API
 export const startSpeechRecognition = (
   onResult: (result: SpeechToTextResult) => void,
