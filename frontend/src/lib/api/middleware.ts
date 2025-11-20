@@ -8,7 +8,10 @@ const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 60; // 60 requests per minute
 
 export const rateLimit = (request: NextRequest): NextResponse | null => {
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  // Get IP from headers (Vercel provides this in x-forwarded-for or x-real-ip)
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const realIp = request.headers.get("x-real-ip");
+  const ip = forwardedFor?.split(",")[0]?.trim() || realIp || "unknown";
   const now = Date.now();
   const record = rateLimitStore.get(ip);
 
