@@ -11,7 +11,7 @@ interface Props {
 export const SpeechRecorder = ({ onTranscript, language = "he-IL" }: Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<ReturnType<typeof startSpeechRecognition>>(null);
 
   useEffect(() => {
     return () => {

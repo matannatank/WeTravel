@@ -4,12 +4,40 @@ export interface SpeechToTextResult {
   confidence?: number;
 }
 
+// Type for SpeechRecognition (Web Speech API)
+export interface SpeechRecognitionType {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: any) => void) | null;
+  onend: (() => void) | null;
+}
+
+export interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      length: number;
+      isFinal: boolean;
+      [index: number]: {
+        transcript: string;
+        confidence?: number;
+      };
+    };
+  };
+}
+
 // Client-side implementation using Web Speech API
 export const startSpeechRecognition = (
   onResult: (result: SpeechToTextResult) => void,
   onError: (error: Error) => void,
   language = "he-IL",
-): SpeechRecognition | null => {
+): SpeechRecognitionType | null => {
   if (typeof window === "undefined") {
     onError(new Error("Speech recognition is only available in the browser"));
     return null;
