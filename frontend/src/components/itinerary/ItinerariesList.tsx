@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { deleteItinerary } from "@/lib/itineraries";
 import { useItineraries } from "@/hooks/useItineraries";
 
@@ -73,13 +74,18 @@ export const ItinerariesList = ({ ownerId }: Props) => {
             </div>
 
             <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600"
-                disabled
+              <Link
+                href={`/itinerary/${itinerary.id}`}
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
-                עריכה בקרוב
-              </button>
+                צפייה
+              </Link>
+              <Link
+                href={`/itinerary/${itinerary.id}/edit`}
+                className="rounded-full border border-indigo-200 px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50"
+              >
+                עריכה
+              </Link>
               <button
                 type="button"
                 className="rounded-full border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50"

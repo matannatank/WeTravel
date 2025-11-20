@@ -1,3 +1,11 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
+import { subscribeToPublicItineraries } from "@/lib/itineraries";
+import type { Itinerary, TravelCategory } from "@/types";
+import { CATEGORY_OPTIONS } from "@/types";
+
 const featureCards = [
   {
     title: "ייבוא רשימות מגוגל מפות",
@@ -16,16 +24,85 @@ const featureCards = [
   },
 ];
 
-const roadmap = [
-  "שלב 1: חיבור Firebase, פרופילים ומסלולים ידניים.",
-  "שלב 2: עורך מסלול, מועדפים ודירוגים.",
-  "שלב 3: אינטגרציית Gemini + Speech-to-Text.",
-  "שלב 4: ייבוא רשימות Google Maps והכנסת עלויות לפי אזור.",
-];
-
 export default function Home() {
+  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<TravelCategory | "all">("all");
+  const [minRating, setMinRating] = useState<number>(0);
+  const [maxBudget, setMaxBudget] = useState<string>("");
+
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = subscribeToPublicItineraries((items) => {
+      setItineraries(items);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const filteredItineraries = useMemo(() => {
+    return itineraries.filter((itinerary) => {
+      // Search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          itinerary.title.toLowerCase().includes(query) ||
+          itinerary.summary?.toLowerCase().includes(query) ||
+          itinerary.primaryDestination.toLowerCase().includes(query) ||
+          itinerary.regions?.some((r) => r.toLowerCase().includes(query));
+
+        if (!matchesSearch) return false;
+      }
+
+      // Category filter
+      if (selectedCategory !== "all") {
+        if (!itinerary.categories.includes(selectedCategory)) return false;
+      }
+
+      // Rating filter
+      if (minRating > 0) {
+        const rating = itinerary.ratingAverage || 0;
+        if (rating < minRating) return false;
+      }
+
+      // Budget filter
+      if (maxBudget) {
+        const budget = Number(maxBudget);
+        const totalBudget = itinerary.budget?.totalEstimated;
+        if (totalBudget && totalBudget > budget) return false;
+      }
+
+      return true;
+    });
+  }, [itineraries, searchQuery, selectedCategory, minRating, maxBudget]);
+
+  const featuredItineraries = useMemo(() => {
+    return filteredItineraries
+      .sort((a, b) => {
+        // Sort by rating first, then by favorites count
+        const ratingA = a.ratingAverage || 0;
+        const ratingB = b.ratingAverage || 0;
+        if (ratingA !== ratingB) return ratingB - ratingA;
+        return (b.favoritesCount || 0) - (a.favoritesCount || 0);
+      })
+      .slice(0, 6);
+  }, [filteredItineraries]);
+
+  const recentItineraries = useMemo(() => {
+    return filteredItineraries
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 6);
+  }, [filteredItineraries]);
+
   return (
     <div className="space-y-16">
+      {/* Hero Section */}
       <section id="vision" className="rounded-3xl bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase text-indigo-500">
           מסע חדש למטיילים
@@ -51,6 +128,122 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Search and Filters */}
+      <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-bold">חיפוש וסינון מסלולים</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">
+              חיפוש
+              <input
+                type="text"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2"
+                placeholder="חפש לפי שם, יעד, אזור..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="text-sm font-medium">
+              קטגוריה
+              <select
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2"
+                value={selectedCategory}
+                onChange={(e) =>
+                  setSelectedCategory(e.target.value as TravelCategory | "all")
+                }
+              >
+                <option value="all">הכל</option>
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm font-medium">
+              דירוג מינימלי
+              <select
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2"
+                value={minRating}
+                onChange={(e) => setMinRating(Number(e.target.value))}
+              >
+                <option value={0}>הכל</option>
+                <option value={4}>4 כוכבים ומעלה</option>
+                <option value={3}>3 כוכבים ומעלה</option>
+                <option value={2}>2 כוכבים ומעלה</option>
+                <option value={1}>1 כוכב ומעלה</option>
+              </select>
+            </label>
+
+            <label className="text-sm font-medium">
+              תקציב מקסימלי
+              <input
+                type="number"
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2"
+                placeholder="למשל: 5000"
+                value={maxBudget}
+                onChange={(e) => setMaxBudget(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="text-sm text-slate-500">
+            נמצאו {filteredItineraries.length} מסלולים
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Itineraries */}
+      {featuredItineraries.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-2xl font-bold">מסלולים מומלצים</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {featuredItineraries.map((itinerary) => (
+              <ItineraryCard key={itinerary.id} itinerary={itinerary} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recent Itineraries */}
+      {recentItineraries.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-2xl font-bold">מסלולים חדשים</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {recentItineraries.map((itinerary) => (
+              <ItineraryCard key={itinerary.id} itinerary={itinerary} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* All Itineraries */}
+      {filteredItineraries.length > 0 && (
+        <section>
+          <h2 className="mb-4 text-2xl font-bold">כל המסלולים</h2>
+          {loading ? (
+            <p className="text-slate-500">טוען מסלולים...</p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredItineraries.map((itinerary) => (
+                <ItineraryCard key={itinerary.id} itinerary={itinerary} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {!loading && filteredItineraries.length === 0 && (
+        <section className="rounded-3xl bg-white p-8 shadow-sm text-center">
+          <p className="text-slate-500">לא נמצאו מסלולים התואמים לחיפוש שלך.</p>
+        </section>
+      )}
+
+      {/* Features */}
       <section
         id="features"
         className="grid gap-6 md:grid-cols-3 md:gap-8 lg:gap-10"
@@ -69,27 +262,60 @@ export default function Home() {
           </article>
         ))}
       </section>
-
-      <section
-        id="roadmap"
-        className="rounded-3xl bg-gradient-to-br from-indigo-600 to-blue-500 p-8 text-white"
-      >
-        <h2 className="text-2xl font-bold">שלבי הפיתוח הבאים</h2>
-        <p className="mt-3 text-indigo-100">
-          אלו הפעימות שנבצע אחרי הקמה: נתעדף חוויית משתמש, נתונים משותפים
-          ואינטגרציות ענן.
-        </p>
-        <ol className="mt-6 space-y-3 text-sm leading-6">
-          {roadmap.map((item, index) => (
-            <li key={item} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-semibold">
-                {index + 1}
-              </span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
     </div>
+  );
+}
+
+function ItineraryCard({ itinerary }: { itinerary: Itinerary }) {
+  return (
+    <Link
+      href={`/itinerary/${itinerary.id}`}
+      className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold group-hover:text-indigo-600">
+            {itinerary.title}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {itinerary.primaryDestination}
+          </p>
+        </div>
+        {itinerary.ratingAverage && itinerary.ratingAverage > 0 && (
+          <div className="flex items-center gap-1 text-sm">
+            <span>⭐</span>
+            <span>{itinerary.ratingAverage.toFixed(1)}</span>
+          </div>
+        )}
+      </div>
+
+      {itinerary.summary && (
+        <p className="mb-3 line-clamp-2 text-sm text-slate-600">
+          {itinerary.summary}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {itinerary.categories.slice(0, 3).map((category) => (
+          <span
+            key={category}
+            className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600"
+          >
+            {category}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+        <span>
+          עודכן: {new Date(itinerary.updatedAt).toLocaleDateString("he-IL")}
+        </span>
+        {itinerary.budget?.totalEstimated && (
+          <span>
+            {itinerary.budget.totalEstimated} {itinerary.budget.currency}
+          </span>
+        )}
+      </div>
+    </Link>
   );
 }

@@ -2,6 +2,7 @@
 
 import { ItineraryForm } from "@/components/itinerary/ItineraryForm";
 import { ItinerariesList } from "@/components/itinerary/ItinerariesList";
+import { FavoritesList } from "@/components/itinerary/FavoritesList";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 
 export default function DashboardPage() {
@@ -54,6 +55,7 @@ export default function DashboardPage() {
 
       <ItineraryForm ownerId={user.uid} />
       <ItinerariesList ownerId={user.uid} />
+      <FavoritesList userId={user.uid} />
     </div>
   );
 }

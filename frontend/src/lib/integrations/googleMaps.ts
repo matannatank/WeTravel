@@ -1,6 +1,3 @@
-import "server-only";
-import { googleMapsApiKey } from "./env";
-
 export interface PlaceSuggestion {
   id: string;
   name: string;
@@ -14,27 +11,49 @@ export interface PlaceSuggestion {
 export const searchPlaces = async (
   query: string,
 ): Promise<PlaceSuggestion[]> => {
-  if (!googleMapsApiKey()) {
-    console.warn("GOOGLE_MAPS_API_KEY חסר. מוחזרת רשימה ריקה.");
+  try {
+    const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      console.error("Failed to search places:", response.statusText);
+      return [];
+    }
+    const data = await response.json();
+    return data.places || [];
+  } catch (error) {
+    console.error("Error searching places:", error);
     return [];
   }
+};
 
-  // TODO: Hook into Places API HTTP endpoint.
-  void query;
-  return [];
+export const getPlaceDetails = async (
+  placeId: string,
+): Promise<PlaceSuggestion | null> => {
+  try {
+    const response = await fetch(`/api/places/details?placeId=${encodeURIComponent(placeId)}`);
+    if (!response.ok) {
+      console.error("Failed to get place details:", response.statusText);
+      return null;
+    }
+    const data = await response.json();
+    return data.place || null;
+  } catch (error) {
+    console.error("Error getting place details:", error);
+    return null;
+  }
 };
 
 export const validatePlaceIds = async (
   placeIds: string[],
 ): Promise<Record<string, PlaceSuggestion | null>> => {
-  if (!googleMapsApiKey()) {
-    throw new Error("GOOGLE_MAPS_API_KEY נדרש לאימות נקודות interest.");
-  }
+  const results: Record<string, PlaceSuggestion | null> = {};
+  
+  await Promise.all(
+    placeIds.map(async (id) => {
+      const place = await getPlaceDetails(id);
+      results[id] = place;
+    }),
+  );
 
-  // Placeholder mapping until API call is available.
-  return placeIds.reduce<Record<string, PlaceSuggestion | null>>((acc, id) => {
-    acc[id] = null;
-    return acc;
-  }, {});
+  return results;
 };
 
