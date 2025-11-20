@@ -1,11 +1,16 @@
 # עדכון מפתחות API
 
-## המפתחות שקיבלת:
+## ⚠️ חשוב - אבטחה:
+**אל תכניס מפתחות API אמיתיים לקובץ זה!** הקובץ הזה עלול להיכנס ל-GitHub.
+
+השתמש בקובץ `.env.local` בלבד (שהוא ב-.gitignore).
+
+## המפתחות שצריך להוסיף ל-`.env.local`:
 
 ```
-GEMINI_API_KEY=AIzaSyD-Pv7zGw2UzDigRNBo5dA6uPYo_usD9SU
-GOOGLE_MAPS_API_KEY=AIzaSyAbk2xd2wLwi6F-MGamE2so0KXui10F3M
-SPEECH_TO_TEXT_API_KEY=AIzaSyBVBUWUPDLZGnbiG0ganJAcCUZLvyZisNs
+GEMINI_API_KEY="your-gemini-key-here"
+GOOGLE_MAPS_API_KEY="your-google-maps-key-here"
+SPEECH_TO_TEXT_API_KEY="your-speech-to-text-key-here"
 ```
 
 ## איך לעדכן:
